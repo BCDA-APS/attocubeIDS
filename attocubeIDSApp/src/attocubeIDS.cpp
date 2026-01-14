@@ -29,9 +29,16 @@ AttocubeIDS::AttocubeIDS(const char* conn_port, const char* driver_port)
         return;
     }
 
+    createParam(POLL_PERIOD_STR, asynParamFloat64, &pollPeriodId_);
     createParam(AXIS0_DISPLACEMENT_STR, asynParamInt64, &axis0DisplacementId_);
     createParam(AXIS1_DISPLACEMENT_STR, asynParamInt64, &axis1DisplacementId_);
     createParam(AXIS2_DISPLACEMENT_STR, asynParamInt64, &axis2DisplacementId_);
+    createParam(AXIS0_ABSOLUTE_POS_STR, asynParamInt64, &axis0AbsolutePosId_);
+    createParam(AXIS1_ABSOLUTE_POS_STR, asynParamInt64, &axis1AbsolutePosId_);
+    createParam(AXIS2_ABSOLUTE_POS_STR, asynParamInt64, &axis2AbsolutePosId_);
+    createParam(AXIS0_REFERENCE_POS_STR, asynParamInt64, &axis0ReferencePosId_);
+    createParam(AXIS1_REFERENCE_POS_STR, asynParamInt64, &axis1ReferencePosId_);
+    createParam(AXIS2_REFERENCE_POS_STR, asynParamInt64, &axis2ReferencePosId_);
 
     epicsThreadCreate("AttocubeIDSPoller", epicsThreadPriorityLow,
                       epicsThreadGetStackSize(epicsThreadStackMedium), (EPICSTHREADFUNC)poll_thread_C, this);
@@ -55,7 +62,7 @@ asynStatus AttocubeIDS::write_read(size_t write_len) {
     return status;
 }
 
-std::optional<json> AttocubeIDS::write_read_json(std::string_view method, json params = json{}) {
+std::optional<json> AttocubeIDS::write_read_json(std::string_view method, json params) {
     json rpc = {
 	{"jsonrpc", "2.0"},
 	{"id", 1},
@@ -65,7 +72,7 @@ std::optional<json> AttocubeIDS::write_read_json(std::string_view method, json p
 
     // dump the json to a string, if its bigger than buffer size, return
     std::string rpc_str = rpc.dump();
-    if (rpc_str.size() >= BUFFER_SIZE) {
+    if (rpc_str.size() >= IO_BUFFER_SIZE) {
         asynPrint(pasynUserDriver_, ASYN_TRACE_ERROR, "json out is larger that buffer size!\n");
 	return std::nullopt;
     }
@@ -85,9 +92,9 @@ std::optional<json> AttocubeIDS::write_read_json(std::string_view method, json p
     }
 }
 
-std::optional<std::array<int64_t, NUM_AXES>> AttocubeIDS::get_displacements() {
-    if (auto data = write_read_json(Method::AxesDisplacement); data.has_value()) {
-	if (data.value().contains("result")) {
+std::optional<std::array<int64_t, NUM_AXES>> AttocubeIDS::get_axes(std::string_view method) {
+    if (auto data = write_read_json(method); data) {
+	if (data->contains("result")) {
 	    try {
 		return data.value()["result"].get<std::array<int64_t, NUM_AXES>>();
 	    } catch (...) {
@@ -104,11 +111,29 @@ void AttocubeIDS::poll() {
 
 	lock();
 
-	if (auto disps = get_displacements(); disps) {
+	double poll_period;
+	getDoubleParam(pollPeriodId_, &poll_period);
+	poll_period = std::max(poll_period, POLL_PERIOD_MIN);
+
+	if (auto disps = get_axes(Method::AxesDisplacement); disps) {
 	    auto [d0, d1, d2] = *disps;
 	    setInteger64Param(axis0DisplacementId_, d0);
 	    setInteger64Param(axis1DisplacementId_, d1);
 	    setInteger64Param(axis2DisplacementId_, d2);
+	}
+
+	if (auto abspos = get_axes(Method::AbsolutePositions); abspos) {
+	    auto [p0, p1, p2] = *abspos;
+	    setInteger64Param(axis0AbsolutePosId_, p0);
+	    setInteger64Param(axis1AbsolutePosId_, p1);
+	    setInteger64Param(axis2AbsolutePosId_, p2);
+	}
+
+	if (auto refpos = get_axes(Method::ReferencePositions); refpos) {
+	    auto [r0, r1, r2] = *refpos;
+	    setInteger64Param(axis0ReferencePosId_, r0);
+	    setInteger64Param(axis1ReferencePosId_, r1);
+	    setInteger64Param(axis2ReferencePosId_, r2);
 	}
 
         callParamCallbacks();
@@ -117,7 +142,7 @@ void AttocubeIDS::poll() {
 	// auto end = std::chrono::steady_clock::now();
 	// auto elap = std::chrono::duration<double>(end-start);
 	// std::cout << "elap = " << elap.count()*1000 << " ms" << std::endl;
-	epicsThreadSleep(0.1);
+	epicsThreadSleep(poll_period);
     }
 }
 

@@ -1,18 +1,66 @@
-record(int64in, "$(P)$(R):Displacement0") {
+record(int64in, "$(P)$(R):Disp0") {
     field(DTYP, "asynInt64")
     field(INP, "@asyn($(PORT),$(ADDR=0))AXIS0_DISPLACEMENT")
     field(EGU, "pm")
     field(SCAN, "I/O Intr")
 }
-record(int64in, "$(P)$(R):Displacement1") {
+record(int64in, "$(P)$(R):Disp1") {
     field(DTYP, "asynInt64")
     field(INP, "@asyn($(PORT),$(ADDR=0))AXIS1_DISPLACEMENT")
     field(EGU, "pm")
     field(SCAN, "I/O Intr")
 }
-record(int64in, "$(P)$(R):Displacement2") {
+record(int64in, "$(P)$(R):Disp2") {
     field(DTYP, "asynInt64")
     field(INP, "@asyn($(PORT),$(ADDR=0))AXIS2_DISPLACEMENT")
     field(EGU, "pm")
     field(SCAN, "I/O Intr")
+}
+
+record(int64in, "$(P)$(R):AbsPos0") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS0_ABSOLUTE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+record(int64in, "$(P)$(R):AbsPos1") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS1_ABSOLUTE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+record(int64in, "$(P)$(R):AbsPos2") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS2_ABSOLUTE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+
+record(int64in, "$(P)$(R):RefPos0") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS0_REFERENCE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+record(int64in, "$(P)$(R):RefPos1") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS1_REFERENCE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+record(int64in, "$(P)$(R):RefPos2") {
+    field(DTYP, "asynInt64")
+    field(INP, "@asyn($(PORT),$(ADDR=0))AXIS2_REFERENCE_POS")
+    field(EGU, "pm")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R):PollPeriodSec") {
+    field(DTYP, "asynFloat64")
+    field(OUT, "@asyn($(PORT),$(ADDR=0))POLL_PERIOD")
+    field(EGU, "s")
+    field(PINI, 1)
+    field(VAL, 0.1)
+    field(DRVH, 1e6)
+    field(DRVL, 0.01)
 }
