@@ -4,6 +4,9 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
+# C++17 is needed for things like std::optional and structured bindings
+USR_CXXFLAGS += -std=c++17
+
 # Define IOC library name
 LIBRARY_IOC += attocubeIDS
 
